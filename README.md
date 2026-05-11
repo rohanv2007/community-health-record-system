@@ -4,7 +4,7 @@
 
 A full-stack clinic operations system for small clinics and rural health centers.
 
-**Live Demo:** [deployed Vercel URL]
+**Live Demo:** [https://community-health-record-system.vercel.app](https://community-health-record-system.vercel.app)
 
 ## Features
 
