@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition, type ComponentType } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Banknote,
@@ -40,7 +40,7 @@ import type {
   RevenueChartProps,
 } from "@/components/app/dashboard-charts";
 import type { PDFDownloadButtonProps } from "@/components/pdf/pdf-download-button";
-import type { DataTableProps } from "@/components/tables/data-table";
+import { DataTable } from "@/components/tables/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -122,21 +122,6 @@ const RevenueChart = dynamic<RevenueChartProps>(
   }
 );
 
-const ClientDataTable = dynamic<DataTableProps<unknown>>(
-  () =>
-    import("@/components/tables/data-table").then(
-      (mod) => mod.DataTable as ComponentType<DataTableProps<unknown>>
-    ),
-  {
-    ssr: false,
-    loading: () => <DataTableSkeleton />,
-  }
-);
-
-function LazyDataTable<TData>(props: DataTableProps<TData>) {
-  return <ClientDataTable {...(props as DataTableProps<unknown>)} />;
-}
-
 function ChartSkeleton({ columns, heights }: { columns: string; heights: string[] }) {
   return (
     <div className={cn("mt-6 grid gap-4", columns)}>
@@ -150,21 +135,6 @@ function ChartSkeleton({ columns, heights }: { columns: string; heights: string[
           </CardContent>
         </Card>
       ))}
-    </div>
-  );
-}
-
-function DataTableSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="h-10 max-w-lg animate-pulse rounded-md bg-muted" />
-      <Card>
-        <CardContent className="space-y-3 p-4">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div key={index} className="h-10 animate-pulse rounded-md bg-muted" />
-          ))}
-        </CardContent>
-      </Card>
     </div>
   );
 }
@@ -315,7 +285,7 @@ export function PatientsModule(data: ModuleData) {
         actions={data.profile.role !== "doctor" && <Button onClick={() => setOpen(true)}><UserPlus className="mr-2 size-4" />New patient</Button>}
       />
       <PatientSheet open={open} setOpen={setOpen} clinicId={data.clinic?.id} />
-      <LazyDataTable columns={columns} data={data.patients} searchPlaceholder="Search by name, ID, phone, blood group..." />
+      <DataTable columns={columns} data={data.patients} searchPlaceholder="Search by name, ID, phone, blood group..." />
     </>
   );
 }
@@ -609,7 +579,7 @@ export function AppointmentsModule(data: ModuleData) {
         }
       />
       <AppointmentSheet open={open} setOpen={setOpen} patients={data.patients} doctors={data.doctors} />
-      {view === "list" ? <LazyDataTable columns={columns} data={data.appointments} /> : <CalendarGrid appointments={data.appointments} />}
+      {view === "list" ? <DataTable columns={columns} data={data.appointments} /> : <CalendarGrid appointments={data.appointments} />}
     </>
   );
 }
@@ -772,7 +742,7 @@ export function BillingModule(data: ModuleData) {
         <StatCard label="Revenue collected" value={Math.round(paid)} icon={CheckCircle2} tone="green" suffix="" />
         <StatCard label="Pending amount" value={Math.round(pending)} icon={Banknote} tone="amber" suffix="" />
       </div>
-      <LazyDataTable columns={columns} data={data.invoices} searchPlaceholder="Search invoice or patient..." />
+      <DataTable columns={columns} data={data.invoices} searchPlaceholder="Search invoice or patient..." />
     </>
   );
 }
@@ -852,7 +822,7 @@ function StaffDirectory({ title, description, rows, role }: { title: string; des
     <>
       <PageHeader eyebrow="Admin" title={title} description={description} actions={<Button onClick={() => setOpen(true)}><UserPlus className="mr-2 size-4" />Add {role}</Button>} />
       <StaffSheet open={open} setOpen={setOpen} role={role} />
-      <LazyDataTable columns={columns} data={rows} />
+      <DataTable columns={columns} data={rows} />
     </>
   );
 }
