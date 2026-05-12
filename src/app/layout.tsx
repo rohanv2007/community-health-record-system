@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { DM_Sans, Sora } from "next/font/google";
+import { Manrope, Plus_Jakarta_Sans } from "next/font/google";
 import { Toaster } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
-const dmSans = DM_Sans({
+const manrope = Manrope({
   subsets: ["latin"],
-  variable: "--font-dm-sans",
+  variable: "--font-manrope",
   display: "swap",
 });
 
-const sora = Sora({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-sora",
+  variable: "--font-plus-jakarta",
   display: "swap",
 });
 
@@ -29,8 +29,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`${dmSans.variable} ${sora.variable} theme antialiased`}>
+    <html
+      lang="en"
+      className={`${manrope.variable} ${plusJakarta.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="theme antialiased">
         <ThemeProvider>
           <TooltipProvider>
             {children}

@@ -44,8 +44,8 @@ export function AppShell({
         profile={profile}
         clinicName={clinicName}
       />
-      <div className={cn("transition-all duration-300", collapsed ? "lg:pl-[88px]" : "lg:pl-72")}>
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/92 px-4 backdrop-blur md:px-6">
+      <div className={cn("transition-[padding] duration-200", collapsed ? "lg:pl-[88px]" : "lg:pl-72")}>
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-border/80 bg-background/88 px-4 shadow-sm backdrop-blur md:px-6">
           <div className="flex items-center gap-3">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
@@ -64,10 +64,10 @@ export function AppShell({
               </SheetContent>
             </Sheet>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              <p className="text-xs font-medium text-muted-foreground">
                 Community Health Record
               </p>
-              <p className="font-heading text-lg font-semibold">{clinicName}</p>
+              <p className="font-heading text-lg font-semibold text-foreground">{clinicName}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -75,7 +75,7 @@ export function AppShell({
             <UserPill profile={profile} />
           </div>
         </header>
-        <main className="mx-auto w-full max-w-[1500px] px-4 py-6 md:px-6 lg:px-8">{children}</main>
+        <main className="mx-auto w-full max-w-[1440px] px-4 py-5 md:px-6 lg:px-8">{children}</main>
       </div>
     </div>
   );
@@ -97,7 +97,7 @@ function DesktopSidebar({
   return (
     <aside
       className={cn(
-        "fixed inset-y-0 left-0 z-40 hidden border-r border-sidebar-border bg-navy text-sidebar-foreground transition-all duration-300 lg:flex lg:flex-col",
+        "fixed inset-y-0 left-0 z-40 hidden border-r border-sidebar-border bg-sidebar text-sidebar-foreground shadow-2xl shadow-slate-950/15 transition-[width] duration-200 lg:flex lg:flex-col",
         collapsed ? "w-[88px]" : "w-72"
       )}
     >
@@ -105,7 +105,7 @@ function DesktopSidebar({
       <Button
         variant="ghost"
         size="icon"
-        className="absolute -right-4 top-6 rounded-full border border-sidebar-border bg-navy text-white hover:bg-teal"
+        className="absolute -right-4 top-6 rounded-full border border-sidebar-border bg-sidebar text-white shadow-lg hover:bg-sidebar-accent"
         onClick={() => setCollapsed(!collapsed)}
         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
       >
@@ -134,17 +134,17 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-20 items-center gap-3 px-5">
-        <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-teal text-white shadow-soft">
+        <div className="grid size-11 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground shadow-soft">
           <Building2 className="size-5" />
         </div>
         {!collapsed && (
           <div className="min-w-0">
             <p className="truncate font-heading text-base font-semibold text-white">{clinicName}</p>
-            <p className="truncate text-xs text-slate-400">Rural clinic operations</p>
+            <p className="truncate text-xs text-slate-400">Clinic workspace</p>
           </div>
         )}
       </div>
-      <Separator className="bg-sidebar-border" />
+      <Separator className="bg-sidebar-border/70" />
       <nav className="flex-1 space-y-1 p-3">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
@@ -155,8 +155,8 @@ function SidebarContent({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex h-11 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-300 transition hover:bg-sidebar-accent hover:text-white",
-                active && "bg-sidebar-accent text-white",
+                "flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-medium text-slate-300 transition-colors hover:bg-sidebar-accent hover:text-white",
+                active && "bg-sidebar-accent text-white shadow-inner shadow-black/10",
                 collapsed && "justify-center px-0"
               )}
             >
@@ -175,10 +175,10 @@ function SidebarContent({
         })}
       </nav>
       <div className="p-3">
-        <div className={cn("rounded-lg border border-sidebar-border p-3", collapsed && "p-2")}>
+        <div className={cn("rounded-lg border border-sidebar-border/80 bg-white/[0.03] p-3", collapsed && "p-2")}>
           <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
             <Avatar className="size-9">
-              <AvatarFallback className="bg-teal text-white">
+              <AvatarFallback className="bg-primary text-primary-foreground">
                 {profile.full_name
                   .split(" ")
                   .map((part) => part[0])
@@ -189,7 +189,7 @@ function SidebarContent({
             {!collapsed && (
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-white">{profile.full_name}</p>
-                <Badge className="mt-1 bg-teal/20 text-teal-50 hover:bg-teal/20">
+                <Badge className="mt-1 bg-primary/15 text-teal-50 hover:bg-primary/15">
                   {roleLabels[profile.role]}
                 </Badge>
               </div>
@@ -213,8 +213,8 @@ function SidebarContent({
 }
 
 function ThemeToggle() {
-  const { theme, setTheme } = useTheme();
-  const isDark = theme === "dark";
+  const { resolvedTheme, setTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   return (
     <Button
       variant="outline"

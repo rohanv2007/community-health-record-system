@@ -1,6 +1,5 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -18,26 +17,13 @@ export function StatCard({
   tone?: "teal" | "green" | "amber" | "blue";
   suffix?: string;
 }) {
-  const [display, setDisplay] = useState(0);
-
-  useEffect(() => {
-    const duration = 700;
-    const start = performance.now();
-    const frame = (now: number) => {
-      const progress = Math.min((now - start) / duration, 1);
-      setDisplay(Math.round(value * progress));
-      if (progress < 1) requestAnimationFrame(frame);
-    };
-    requestAnimationFrame(frame);
-  }, [value]);
-
   return (
-    <Card className="overflow-hidden border shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg">
+    <Card className="overflow-hidden transition-colors hover:border-primary/30">
       <CardContent className="flex items-center justify-between p-5">
         <div>
-          <p className="text-sm text-muted-foreground">{label}</p>
-          <p className="mt-2 font-heading text-3xl font-semibold">
-            {display.toLocaleString()}
+          <p className="text-sm font-medium text-muted-foreground">{label}</p>
+          <p className="mt-2 font-heading text-3xl font-semibold tabular-nums">
+            {value.toLocaleString()}
             {suffix}
           </p>
         </div>

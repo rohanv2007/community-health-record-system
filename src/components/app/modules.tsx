@@ -3,7 +3,7 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState, useTransition, type ComponentType } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
 import {
   Banknote,
@@ -19,19 +19,6 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip as ChartTooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
 import { toast } from "sonner";
 import {
   createAppointmentAction,
@@ -48,8 +35,12 @@ import {
 import { PageHeader } from "@/components/app/page-header";
 import { StatCard } from "@/components/app/stat-card";
 import { StorageUploadField } from "@/components/app/storage-upload-field";
+import type {
+  DashboardChartsProps,
+  RevenueChartProps,
+} from "@/components/app/dashboard-charts";
 import type { PDFDownloadButtonProps } from "@/components/pdf/pdf-download-button";
-import { DataTable } from "@/components/tables/data-table";
+import type { DataTableProps } from "@/components/tables/data-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +64,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { bloodGroups } from "@/lib/constants";
 import { formatDate, formatDateTime, getAge, lastNDays, nextNDays } from "@/lib/date-utils";
 import { calculateInvoiceTotals } from "@/lib/invoice-utils";
+import { cn } from "@/lib/utils";
 import type {
   ActivityEvent,
   Appointment,
@@ -113,6 +105,69 @@ const ClientPDFDownloadButton = dynamic<PDFDownloadButtonProps>(
     loading: () => <Button variant="outline" size="sm" disabled>Preparing</Button>,
   }
 );
+
+const DashboardCharts = dynamic<DashboardChartsProps>(
+  () => import("@/components/app/dashboard-charts").then((mod) => mod.DashboardCharts),
+  {
+    ssr: false,
+    loading: () => <ChartSkeleton columns="xl:grid-cols-[1.5fr_0.8fr]" heights={["h-80", "h-80"]} />,
+  }
+);
+
+const RevenueChart = dynamic<RevenueChartProps>(
+  () => import("@/components/app/dashboard-charts").then((mod) => mod.RevenueChart),
+  {
+    ssr: false,
+    loading: () => <ChartSkeleton columns="grid-cols-1" heights={["h-96"]} />,
+  }
+);
+
+const ClientDataTable = dynamic<DataTableProps<unknown>>(
+  () =>
+    import("@/components/tables/data-table").then(
+      (mod) => mod.DataTable as ComponentType<DataTableProps<unknown>>
+    ),
+  {
+    ssr: false,
+    loading: () => <DataTableSkeleton />,
+  }
+);
+
+function LazyDataTable<TData>(props: DataTableProps<TData>) {
+  return <ClientDataTable {...(props as DataTableProps<unknown>)} />;
+}
+
+function ChartSkeleton({ columns, heights }: { columns: string; heights: string[] }) {
+  return (
+    <div className={cn("mt-6 grid gap-4", columns)}>
+      {heights.map((height, index) => (
+        <Card key={`${height}-${index}`}>
+          <CardHeader>
+            <div className="h-5 w-44 animate-pulse rounded bg-muted" />
+          </CardHeader>
+          <CardContent>
+            <div className={cn("animate-pulse rounded-md bg-muted", height)} />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
+
+function DataTableSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="h-10 max-w-lg animate-pulse rounded-md bg-muted" />
+      <Card>
+        <CardContent className="space-y-3 p-4">
+          {Array.from({ length: 6 }).map((_, index) => (
+            <div key={index} className="h-10 animate-pulse rounded-md bg-muted" />
+          ))}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 function StatusBadge({ value }: { value: keyof typeof statusStyles | string }) {
   return (
@@ -177,8 +232,6 @@ export function DashboardModule(data: ModuleData) {
     },
     { name: "60+", value: data.patients.filter((patient) => getAge(patient.dob) > 60).length },
   ];
-  const colors = ["#0D9488", "#16A34A", "#D97706", "#2563EB"];
-
   return (
     <>
       <PageHeader
@@ -201,36 +254,7 @@ export function DashboardModule(data: ModuleData) {
         <StatCard label="Pending Bills" value={pendingBills.length} icon={Banknote} tone="amber" />
         <StatCard label="Active Doctors" value={data.doctors.length} icon={Stethoscope} tone="green" />
       </div>
-      <div className="mt-6 grid gap-4 xl:grid-cols-[1.5fr_0.8fr]">
-        <Card>
-          <CardHeader><CardTitle>Appointments per day</CardTitle></CardHeader>
-          <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartDays}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="day" tickLine={false} axisLine={false} />
-                <YAxis allowDecimals={false} tickLine={false} axisLine={false} />
-                <ChartTooltip />
-                <Bar dataKey="appointments" radius={[6, 6, 0, 0]} fill="#0D9488" />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader><CardTitle>Patient age distribution</CardTitle></CardHeader>
-          <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={ageBuckets} dataKey="value" nameKey="name" innerRadius={58} outerRadius={92} paddingAngle={3}>
-                  {ageBuckets.map((_, index) => <Cell key={index} fill={colors[index % colors.length]} />)}
-                </Pie>
-                <Legend />
-                <ChartTooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      <DashboardCharts appointmentDays={chartDays} ageBuckets={ageBuckets} />
       <Card className="mt-6">
         <CardHeader><CardTitle>Recent activity</CardTitle></CardHeader>
         <CardContent className="space-y-4">
@@ -291,7 +315,7 @@ export function PatientsModule(data: ModuleData) {
         actions={data.profile.role !== "doctor" && <Button onClick={() => setOpen(true)}><UserPlus className="mr-2 size-4" />New patient</Button>}
       />
       <PatientSheet open={open} setOpen={setOpen} clinicId={data.clinic?.id} />
-      <DataTable columns={columns} data={data.patients} searchPlaceholder="Search by name, ID, phone, blood group..." />
+      <LazyDataTable columns={columns} data={data.patients} searchPlaceholder="Search by name, ID, phone, blood group..." />
     </>
   );
 }
@@ -585,7 +609,7 @@ export function AppointmentsModule(data: ModuleData) {
         }
       />
       <AppointmentSheet open={open} setOpen={setOpen} patients={data.patients} doctors={data.doctors} />
-      {view === "list" ? <DataTable columns={columns} data={data.appointments} /> : <CalendarGrid appointments={data.appointments} />}
+      {view === "list" ? <LazyDataTable columns={columns} data={data.appointments} /> : <CalendarGrid appointments={data.appointments} />}
     </>
   );
 }
@@ -748,7 +772,7 @@ export function BillingModule(data: ModuleData) {
         <StatCard label="Revenue collected" value={Math.round(paid)} icon={CheckCircle2} tone="green" suffix="" />
         <StatCard label="Pending amount" value={Math.round(pending)} icon={Banknote} tone="amber" suffix="" />
       </div>
-      <DataTable columns={columns} data={data.invoices} searchPlaceholder="Search invoice or patient..." />
+      <LazyDataTable columns={columns} data={data.invoices} searchPlaceholder="Search invoice or patient..." />
     </>
   );
 }
@@ -828,7 +852,7 @@ function StaffDirectory({ title, description, rows, role }: { title: string; des
     <>
       <PageHeader eyebrow="Admin" title={title} description={description} actions={<Button onClick={() => setOpen(true)}><UserPlus className="mr-2 size-4" />Add {role}</Button>} />
       <StaffSheet open={open} setOpen={setOpen} role={role} />
-      <DataTable columns={columns} data={rows} />
+      <LazyDataTable columns={columns} data={rows} />
     </>
   );
 }
@@ -897,20 +921,7 @@ export function ReportsModule(data: ModuleData) {
   return (
     <>
       <PageHeader eyebrow="Admin" title="Reports" description="Revenue and activity summaries for clinic leadership." actions={<Button variant="outline"><Download className="mr-2 size-4" />Export CSV</Button>} />
-      <Card>
-        <CardHeader><CardTitle>Revenue trend</CardTitle></CardHeader>
-        <CardContent className="h-96">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={revenue}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} />
-              <XAxis dataKey="day" />
-              <YAxis />
-              <ChartTooltip />
-              <Bar dataKey="revenue" fill="#0D9488" radius={[6, 6, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
+      <RevenueChart revenue={revenue} />
     </>
   );
 }
@@ -964,7 +975,7 @@ function SelectField({
 function Info({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+      <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
       <p className="mt-1 text-sm font-medium">{value}</p>
     </div>
   );

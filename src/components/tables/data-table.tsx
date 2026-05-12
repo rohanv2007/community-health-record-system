@@ -10,7 +10,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,21 +23,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+export type DataTableProps<TData> = {
+  columns: ColumnDef<TData>[];
+  data: TData[];
+  searchPlaceholder?: string;
+};
+
 export function DataTable<TData>({
   columns,
   data,
   searchPlaceholder = "Search...",
-}: {
-  columns: ColumnDef<TData>[];
-  data: TData[];
-  searchPlaceholder?: string;
-}) {
+}: DataTableProps<TData>) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [globalFilter, setGlobalFilter] = useState("");
+  const deferredGlobalFilter = useDeferredValue(globalFilter);
   const table = useReactTable({
     data,
     columns,
-    state: { sorting, globalFilter },
+    state: { sorting, globalFilter: deferredGlobalFilter },
     onSortingChange: setSorting,
     onGlobalFilterChange: setGlobalFilter,
     getCoreRowModel: getCoreRowModel(),
@@ -48,16 +51,16 @@ export function DataTable<TData>({
 
   return (
     <div className="space-y-4">
-      <div className="relative max-w-md">
+      <div className="relative max-w-lg">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={globalFilter}
           onChange={(event) => setGlobalFilter(event.target.value)}
           placeholder={searchPlaceholder}
-          className="pl-9"
+          className="h-10 bg-card pl-9 shadow-sm"
         />
       </div>
-      <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="overflow-hidden rounded-lg border bg-card shadow-sm">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -75,7 +78,7 @@ export function DataTable<TData>({
           <TableBody>
             {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id} className="transition hover:bg-muted/60">
+                <TableRow key={row.id} className="transition-colors hover:bg-muted/55">
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
