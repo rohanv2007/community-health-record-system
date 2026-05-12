@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState, useTransition } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { Building2, ChevronsLeft, ChevronsRight, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOutAction } from "@/app/actions";
@@ -34,7 +34,22 @@ export function AppShell({
 }) {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const visibleItems = navItems.filter((item) => item.roles.includes(profile.role));
+  const router = useRouter();
+  const visibleItems = useMemo(
+    () => navItems.filter((item) => item.roles.includes(profile.role)),
+    [profile.role]
+  );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      visibleItems.forEach((item) => router.prefetch(item.href));
+      router.prefetch("/patients");
+      router.prefetch("/appointments");
+      if (profile.role !== "doctor") router.prefetch("/billing");
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [profile.role, router, visibleItems]);
 
   return (
     <div className="min-h-screen bg-background">
