@@ -2,6 +2,7 @@ import { AppShell } from "@/components/app/app-shell";
 import { requireCurrentProfile } from "@/lib/server/auth";
 
 export const dynamic = "force-dynamic";
+export const preferredRegion = "bom1";
 
 export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireCurrentProfile();
