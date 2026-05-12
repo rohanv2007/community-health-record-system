@@ -41,14 +41,24 @@ export function AppShell({
   );
 
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      visibleItems.forEach((item) => router.prefetch(item.href));
-      router.prefetch("/patients");
-      router.prefetch("/appointments");
-      if (profile.role !== "doctor") router.prefetch("/billing");
-    }, 300);
+    const visibleHrefs = visibleItems.map((item) => item.href);
+    const priorityHrefs = ["/patients", "/appointments", profile.role !== "doctor" ? "/billing" : "/prescriptions"]
+      .filter((href): href is string => Boolean(href) && visibleHrefs.includes(href));
+    const secondaryHrefs = visibleHrefs.filter((href) => !priorityHrefs.includes(href));
 
-    return () => window.clearTimeout(timeout);
+    const priorityTimer = window.setTimeout(() => {
+      priorityHrefs.forEach((href) => router.prefetch(href));
+    }, 120);
+    const secondaryTimer = window.setTimeout(() => {
+      secondaryHrefs.forEach((href, index) => {
+        window.setTimeout(() => router.prefetch(href), index * 180);
+      });
+    }, 1800);
+
+    return () => {
+      window.clearTimeout(priorityTimer);
+      window.clearTimeout(secondaryTimer);
+    };
   }, [profile.role, router, visibleItems]);
 
   return (
