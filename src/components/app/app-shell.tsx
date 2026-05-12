@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { Building2, ChevronsLeft, ChevronsRight, LogOut, Menu, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { signOutAction } from "@/app/actions";
+import { NavigationFeedback } from "@/components/app/navigation-feedback";
 import { navItems, roleLabels } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { AppRole } from "@/types/database";
@@ -37,6 +38,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
+      <NavigationFeedback />
       <DesktopSidebar
         collapsed={collapsed}
         setCollapsed={setCollapsed}

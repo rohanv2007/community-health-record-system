@@ -29,28 +29,27 @@ export async function middleware(request: NextRequest) {
   });
 
   const isPublic = publicRoutes.some((route) => pathname.startsWith(route));
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub;
 
-  if (!user && !isPublic) {
+  if (!userId && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (user && pathname === "/login") {
+  if (userId && pathname === "/login") {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
     return NextResponse.redirect(url);
   }
 
-  if (user && !isPublic) {
+  if (userId && !isPublic) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role, clinic_id, active")
-      .eq("user_id", user.id)
+      .eq("user_id", userId)
       .maybeSingle();
 
     if (!profile && pathname !== "/setup") {

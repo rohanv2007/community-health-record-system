@@ -10,6 +10,18 @@
   }
 }
 
+@keyframes navigation-progress {
+  0% {
+    transform: translateX(-110%);
+  }
+  55% {
+    transform: translateX(90%);
+  }
+  100% {
+    transform: translateX(210%);
+  }
+}
+
 @layer base {
   .theme {
     --font-heading: var(--font-plus-jakarta), var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
